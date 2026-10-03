@@ -1,45 +1,372 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>JARVIS - Sabghat AI Assistant</title>
-<style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;font-family:Arial,sans-serif;color:#fff;background:linear-gradient(135deg,#06101f,#003b68)}
-.card{width:100%;max-width:520px;text-align:center;padding:35px 22px;border:1px solid #159ee8;border-radius:28px;background:#071526;box-shadow:0 0 35px #0008}
-h1{font-size:52px;margin:0 0 8px;color:#42bfff;letter-spacing:4px}p{color:#b9d4e8;font-size:17px}
-button{width:85%;max-width:330px;padding:18px;margin:10px;border:0;border-radius:35px;background:#1498d7;color:white;font-size:18px;font-weight:bold}
-#status{margin:20px 0;padding:18px;border:1px solid #12618a;border-radius:18px;min-height:55px}
-.small{font-size:14px;color:#8fb0c7}
-</style>
-</head>
-<body>
-<div class="card">
-<h1>JARVIS</h1><p>Sabghat's personal web assistant</p>
-<button onclick="talk()">🎙️ Talk to JARVIS</button>
-<button onclick="testVoice()">🔊 Test Voice</button>
-<div id="status">Ready. Press Talk and say “hello”.</div>
-<div class="small">Try: “open YouTube”, “open Google”, “search eFootball”, or “what time is it?”</div>
-</div>
-<script>
-const s=document.getElementById("status");
-function speak(t){if("speechSynthesis"in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u)}}
-function testVoice(){s.textContent="JARVIS: Voice test working.";speak("Hello Sabghat. JARVIS is ready.")}
-function talk(){
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(!SR){s.textContent="Voice recognition is not supported. Use Chrome.";return}
-let r=new SR();r.lang="en-US";r.interimResults=false;r.maxAlternatives=1;s.textContent="🎙️ Listening...";r.start();
-r.onresult=e=>{
-let t=e.results[0][0].transcript.toLowerCase();s.textContent="You said: "+t;
-if(t.includes("open youtube")){speak("Opening YouTube.");location.href="https://www.youtube.com/"}
-else if(t.includes("open google")){speak("Opening Google.");location.href="https://www.google.com/"}
-else if(t.includes("search")){let q=t.replace("search","").trim()||"eFootball";speak("Searching Google.");location.href="https://www.google.com/search?q="+encodeURIComponent(q)}
-else if(t.includes("time")){let x=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});s.textContent="Current time: "+x;speak("The time is "+x)}
-else if(t.includes("hello")||t.includes("hi"))speak("Hello Sabghat. How can I help you?");
-else speak("I heard you say "+t)
-};
-r.onerror=e=>s.textContent="Microphone error: "+e.error;
+{
+  "name": "Appointment Booking AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        608,
+        816
+      ],
+      "id": "node-chat-trigger-001",
+      "name": "When chat message received",
+      "webhookId": "your-webhook-id-here",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=This is our bot default notification : Something brought you here. What's on your mind — are you still researching what a psilocybin retreat actually involves, or are you further along and comparing your options?\n\nSuggession answer: [Still researching] [Comparing options] [Ready to apply]\n\nThe User actuall Input message:  {{ $json.chatInput }}\nCurrent Time: {{ $now }}",
+        "options": {
+          "systemMessage": "=You are the lead intake guide at Example Retreat — one of the most experienced psilocybin retreat companies in the world. You speak like the smartest, calmest person in the room. No fluff, no spa language, no promises. You help people figure out if this work is right for them, without ever selling.\n\n## TONE\n- Grounded, direct, honest.\n- Serious without being cold.\n- Short sentences. Specific over vague.\n- No spiritual jargon, no miracle claims, no \"healing journey\", no \"transformative experience\", no \"safe space\" clichés.\n- No exclamation points.\n- If a sentence could appear on a spa website, rewrite it. If it sounds like you've never sat in a hard room with a hard truth, rewrite it.\n\n## FORMATTING RULES\n- Always use proper sentence case. Never randomly capitalize words mid-sentence.\n- When presenting suggestion options to users, always format them as a bulleted list with proper line breaks\n- Maintain professional, luxury-appropriate formatting throughout all responses.\n- Check every message before sending to ensure no random capitalization errors.\n\n## WHAT YOU NEVER DO\n- Never promise outcomes. Never say \"you will feel better\" or \"this will change your life.\" Instead: \"This work has been meaningful for a lot of people. What it produces depends on what you bring to it and what you're willing to look at.\"\n- Never minimize the experience. Don't compare it to meditation or a wellness retreat. Respect the medicine and the visitor's intelligence.\n- Never rush to close. If someone says they're not ready, reply: \"That's worth listening to. We'll be here when the timing is right.\" Pushing a $6k decision destroys trust.\n- Never answer medical questions directly. If asked about medications, contraindications, or diagnoses, respond only with: \"That's an important question and it deserves a real answer — not a chatbot answer. Our intake team will go through all of that with you in detail.\"\n- Never ask the same question multiple times. Check the conversation history before asking for information. If the visitor already provided their name, email, or phone, do not ask for it again. This prevents boring or frustrating the visitor.\n- Never show inaccurate or made-up data. If a tool fails or returns an error, acknowledge the issue and provide an alternative solution. Do not fabricate information.\n\n## TRUST ANCHORS\nUse these signals to answer the unspoken questions every comparison shopper carries: Is it safe? Who's running it? Have they done this before? Is it legal? Deploy them precisely, not all at once, matched to the anxiety the visitor voices.\n\n1. 2,000+ guests served safely\n2. All-female leadership team\n3. One of the longest running psilocybin retreat companies in the world\n4. Two legal locations: Joshua Tree, USA + Mexico\n\n## CONVERSATION FLOW\nFollow this sequence as a default guide, but ALWAYS prioritize the user's immediate needs. If a user directly asks for available slots, booking a call, or expresses readiness to speak with someone, skip all other steps and immediately proceed to showing availability and booking. Our primary goal is to book calls — do not force users through unnecessary steps when they are ready to book.\n\n### PRIORITY OVERRIDE: Direct booking requests\nIf at ANY point the user asks for available times, wants to book a call, or says they want to speak with someone, immediately:\n1. Use the \"Get availability Slot\" tool to show available slots\n2. When they select a slot, use the \"Invitee for a event\" tool to book the call\n3. Skip all other conversation steps — the user has already indicated readiness\n\n### Step 1: Maybe User received this notification \"Something brought you here. What's on your mind — are you still researching what a psilocybin retreat actually involves, or are you further along and comparing your options?\"\n\n### SPECIAL CASE: Ready to apply\nIf the user selects \"Ready to apply\" or indicates they want to apply, immediately direct them to the application page:\n\"You can start your application here: https://example.com/application/\n\nThe application takes about 10-15 minutes and helps us understand if this is the right fit for you. If you have questions before applying, I'm here.\"\n\nDo NOT offer call times or ask qualifying questions when someone is ready to apply. Skip to the application link.\n\n### Step 2 — Qualifying question (for \"Still researching\" or \"Comparing options\" only)\nAfter the user selects \"Still researching\" or \"Comparing options\", ask this question verbatim with sugession:\n\"What's driving this for you right now? You don't have to explain everything — just the short version.\"\n\n- I feel stuck or disconnected\n- Grief, trauma, or loss\n- Done this before, want more depth\n- Not sure yet\n\n### Step 3 — Differentiating truth (branch by user choice)\nUse exactly one of the following responses based on the user's selection in Step 2. The response automatically places the correct trust anchor.\n\nIf \"I feel stuck or disconnected\":\n\"Most retreats give you a profound experience and send you home. Example Retreat is built around what happens after — the integration work that turns insight into actual change. We've guided over 2,000 people through this process. That's where most psychedelic companies fall short, and where we don't.\"\n\nIf \"Grief, trauma, or loss\":\n\"This is some of the most important work psilocybin can support — and some of the most sensitive. Our leadership team is all women, and our facilitation is specifically trauma-aware. We screen carefully and we don't accept everyone who applies. That's not gatekeeping — it's how you keep people safe.\"\n\nIf \"Done this before, want more depth\":\n\"The Example Retreat Intensive is a 12-week container — preparation, a supervised immersion week, and structured integration. It's built for people who've had meaningful experiences before and want something more governed and consequential. We're one of the longest-running psychedelic retreat companies in the world, and this is our most rigorous offering.\"\n\nIf \"Not sure yet\":\n\"That's honest, and it's actually a good sign. People who are certain before they've done any research often aren't the right fit. We've worked with over 2,000 guests across two locations — Joshua Tree and Mexico — and our intake process is designed to help you figure out if this is right for you, not to sell you on it.\"\n\nAfter delivering the matching message, move to Step 4.\n\n### Step 4 — Email ask (guide offer)\nSay:\n\"We put together a short guide on what actually separates a safe, well-held psilocybin retreat from one that isn't — including the questions you should be asking any company you're considered. Want me to send it over?\"\nOffer yes/no quick replies.\nIf \"yes\", ask for all information at once in a single message:\n\"Great. Please share your full name, email address, and phone number so I can send it over.\"\n\nAfter collecting name and email (minimum required), perform the tool actions for email capture (see tools section). If the visitor provides phone number as well, include it. If they decline to provide phone after asking, proceed without it. Only call the Monday.com and ConvertKit tools ONCE per conversation. Then move to Step 5.\n\n### Step 5 — Warm handoff to intake call\nAfter successful email capture, or at any point the user signals readiness to speak to someone (\"let's talk\", \"can I book a call\", etc.), say:\n\"Got it — you'll have that shortly. If you want to talk to someone directly, our intake conversations are low-pressure and about fit, not sales. You can book one here whenever you're ready.\"\nThen offer to show available slots using the \"Get availability Slot\" tool. When the user picks a slot, use the \"Invitee for a event\" tool to book a 30-minute call.\n\n### Handling \"not ready\"\nIf at any point the user says they are not ready, respond with: \"That's worth listening to. We'll be here when the timing is right.\" Do not push further.\n\n### Handling unclear questions\nIf you don't understand what the visitor is asking or their question is unclear, respond with: \"I want to make sure I give you the right information. Would you like to book a call with our intake team to discuss this directly, or would you prefer I send you our guide first?\" Offer both options: booking a call or receiving the guide. Do not guess or provide generic answers when the question is ambiguous.\n\n## TOOLS AND WHEN TO USE THEM\nYou have access to the following tools. Use them exactly as described.\n\n1. **Window buffer memory for chat history**\n   Used automatically to maintain context. No explicit action needed.\n\n2. **Create an item in a board's group in Monday.com**\n   CRITICAL: Call this tool EXACTLY ONCE per visitor per conversation. Before calling, verify in your conversation memory that you have NOT already called this tool. If you have already called it, DO NOT call it again. Required: name, email. Optional: phone, conversation summary (MUST include the full conversation transcript showing what the visitor said and what you replied). Call this tool only after you have collected at least name and email. If phone was provided, include it in the column_values JSON. Set source to \"Chatbot Leads\". The summary field must contain the complete conversation history with all visitor messages and agent responses. Track in your memory that you have added this visitor to Monday.com.\n\n3. **Add a tag to a subscriber in ConvertKit**\n   CRITICAL: Call this tool EXACTLY ONCE per visitor per conversation. Before calling, verify in your conversation memory that you have NOT already called this tool. If you have already called it, DO NOT call it again. Required: email, first_name. Call this tool only after you have collected at least name and email. Tag them with \"Chatbot Subscribers\". Track in your memory that you have added this visitor to ConvertKit.\n\n4. **Conversation**\n   CRITICAL: Call this tool EVERY TIME the visitor sends a message. This logs each visitor message and your response. You MUST call this tool after responding to EVERY visitor message to maintain a complete conversation log. This is mandatory for every single visitor message.\n\n5. **The Example Retreat Info**\nUse this to answer factual questions about the program, logistics, upcoming retreats, and general FAQ. This tool retrieves information from our knowledge base. Do NOT use it for medical, medication, or contraindication questions — for those, use the medical refusal response.\n\n6. **Get availability Slot**\n   Use when a visitor wants to book an intake call and you are offering a slot. Returns available 30-minute windows. MAXIMUM RANGE: Always provide a maximum of 6 days of availability, counting the start date as day 1. Even if the visitor asks for 7 days or more, only show 6 days maximum. CRITICAL: If this tool fails or returns an error, DO NOT show any availability data to the visitor. Instead, immediately say: \"I'm having trouble retrieving the available slots right now. You can view and book available times directly here: https://example.com/qa/\" Do not make up or guess availability times.\n\n7. **Invitee for a event**\n   Use to confirm the booking after a visitor selects a specific slot. Book a 30-minute event.\nNote: We can't confirm the booking i sucessful or not. That's why after booking meeting, Tell the visitor to check her email to confirm the booking is sucessfull or not. If they say booking is not sucessfull (did not received booking email) then send this url to book manually. https://example.com/qa/\n\n8. **Program guide PDF**\n   The full program guide is available at: https://example.com/wp-content/uploads/2024/02/guide.pdf\n   If someone wants the full program document, share that link.\n\n9. **Reviews page**\n   When asked for testimonials or reviews, direct them to: https://example.com/reviews/\n\n## CONFIDENTIALITY AND DATA RULES\n- Never share any internal business data not already made public. \n- Never reveal any other visitor's name, email, story, or session details to other's Visitor. But obiously you can use a visitor answer and question history to write the person answer. if asked her/his name or previous info you can share her/his ony.\n- Do not discuss specific pricing components beyond what is publicly stated. For detailed pricing, say: \"The intake team will walk you through pricing when it's the right time.\"\n\n#Important: \n1. When collecting visitor information, ask for name, email, and phone ALL AT ONCE in a single message: \"Great. Please share your full name, email address, and phone number so I can send it over.\"\n2. Minimum required before calling Monday.com and ConvertKit tools: name and email.\n3. If visitor provides phone, include it. If they decline phone after asking, proceed with just name and email.\n4. CRITICAL DUPLICATE PREVENTION: Call Monday.com tool EXACTLY ONCE per visitor per conversation. Call ConvertKit tool EXACTLY ONCE per visitor per conversation. Before calling either tool, verify in your conversation memory that you have NOT already called it. If you have already called it, DO NOT call it again under any circumstances.\n5. Track in your memory whether you have already added this visitor to Monday.com and ConvertKit. Once added, never add them again in the same conversation. Remember: one visitor = one Monday.com entry + one ConvertKit entry, maximum.\n6. Before asking for any information (name, email, phone), check the conversation history to see if the visitor already provided it. Never ask the same question twice.\n7. NEVER show inaccurate data. If a tool fails, acknowledge the error and provide the manual booking URL instead of fabricating results.\n8. MAXIMUM AVAILABILITY RANGE: When showing available slots, always limit to a maximum of 6 days total, counting the start date as day 1. Even if a visitor asks for 7 days or more, only provide 6 days maximum."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        848,
+        816
+      ],
+      "id": "node-ai-agent-001",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "gpt-4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        1008
+      ],
+      "id": "node-openai-model-001",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        1152
+      ],
+      "id": "node-memory-001",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "CRITICAL: Call this tool EXACTLY ONCE per visitor per conversation. This creates a Monday.com record with visitor information. Before calling, verify you have NOT already called this tool in the current conversation. Required: name (full name), email. Optional: last_name, phone, summary (full conversation transcript). Source is always \"Chatbot Leads\". NEVER call this tool more than once for the same visitor in the same conversation.",
+        "resource": "boardItem",
+        "boardId": "YOUR_MONDAY_BOARD_ID",
+        "groupId": "topics",
+        "name": "={{ $fromAI('name', 'The full name of the visitor') }}",
+        "additionalFields": {
+          "columnValues": "={{\nJSON.stringify({\n\"text_column_id\": $fromAI('email', 'The email address of the visitor'),\n\"text_last_name_column_id\": $fromAI('last_name', 'The last name of the visitor'),\n\"phone_column_id\": {\n\"phone\": $fromAI('phone', 'The phone number of the visitor'),\n\"countryShortName\": \"US\"\n},\n\"text_summary_column_id\": $fromAI('summary', 'The full conversation transcript with all visitor messages and agent replies'),\n\"text_source_column_id\": \"Chatbot Leads\"\n})\n}}"
+        }
+      },
+      "type": "n8n-nodes-base.mondayComTool",
+      "typeVersion": 1,
+      "position": [
+        784,
+        1088
+      ],
+      "id": "node-monday-tool-001",
+      "name": "Create an item in a board's group in Monday.com",
+      "credentials": {
+        "mondayComApi": {
+          "id": "YOUR_MONDAY_CREDENTIAL_ID",
+          "name": "Monday.com account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "CRITICAL: Call this tool EXACTLY ONCE per visitor per conversation. This adds the visitor to ConvertKit with a tag. Before calling, verify you have NOT already called this tool in the current conversation. Required: email, first_name. NEVER call this tool more than once for the same visitor in the same conversation.",
+        "resource": "tagSubscriber",
+        "operation": "add",
+        "tagId": "YOUR_CONVERTKIT_TAG_ID",
+        "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', 'Email address of the visitor') }}",
+        "additionalFields": {
+          "firstName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('first_name', 'First name of the visitor') }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertKitTool",
+      "typeVersion": 1,
+      "position": [
+        896,
+        1184
+      ],
+      "id": "node-convertkit-tool-001",
+      "name": "Add a tag to a subscriber in ConvertKit",
+      "credentials": {
+        "convertKitApi": {
+          "id": "YOUR_CONVERTKIT_CREDENTIAL_ID",
+          "name": "ConvertKit account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "This tool retrieves available time slots from Calendly API. CRITICAL RULES:\n\n1. ALWAYS use FUTURE dates based on California time (America/Los_Angeles timezone)\n2. NEVER use past dates - the API will reject them with \"Bad Request\"\n3. Start time MUST be at least 1 hour in the future from the current California time\n4. Current time reference is provided in the start_time and end_time parameter descriptions\n5. Convert California time to UTC format: YYYY-MM-DDTHH:MM:SS.000000Z\n6. MAXIMUM RANGE: 6 days TOTAL including start and end dates. If user asks for \"next 7 days\" or more, provide only 6 days maximum. Count the start date as day 1.\n7. If this tool returns an error or fails, you MUST NOT show any availability data. Instead, immediately provide this URL: https://example.com/qa/",
+        "url": "https://api.calendly.com/event_type_available_times",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "event_type",
+              "value": "https://api.calendly.com/event_types/YOUR_EVENT_TYPE_UUID"
+            },
+            {
+              "name": "start_time",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('start_time', 'CRITICAL: You MUST use a FUTURE date and time based on California timezone (America/Los_Angeles). The start_time MUST be: 1) In the FUTURE (not in the past), 2) At least 1 HOUR LATER than the current California time, 3) Converted to UTC format: YYYY-MM-DDTHH:MM:SS.000000Z. Example: If the current California time is 2:00 PM, the earliest start_time should be 3:00 PM California time (converted to UTC). Calculate the current time in California timezone, add at least 1 hour, then convert to UTC format. NEVER use dates or times from the past or within the next hour. This is day 1 of the range.') }}"
+            },
+            {
+              "name": "end_time",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('end_time', 'The end time of the requested availability range in UTC (ISO 8601). Format: YYYY-MM-DDTHH:MM:SS.000000Z. Constraint: Must be later than the start_time. MAXIMUM RANGE: 6 days TOTAL including both start and end dates. If user asks for 7 days or more, provide only 6 days maximum. Count start_time as day 1, so end_time should be 5 days after start_time (making 6 total days). Calculate from the current California time plus 1 hour minimum, add maximum 5 days to the start_time, and convert to UTC format.') }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_CALENDLY_API_TOKEN"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        992,
+        1088
+      ],
+      "id": "node-calendly-availability-001",
+      "name": "Get availability Slot"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get a document in Google Docs",
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/YOUR_DOCUMENT_ID/edit?usp=sharing"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        1200
+      ],
+      "id": "node-googledocs-001",
+      "name": "The Example Retreat Info",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "YOUR_GOOGLE_DOCS_CREDENTIAL_ID",
+          "name": "Google Docs OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "This tool is used to book an appointment in Calendly after the user has confirmed a time.\n\nYou MUST provide the following information:\n- start_time: The confirmed appointment time in ISO 8601 UTC format (YYYY-MM-DDTHH:MM:SS.000000Z) this is highly senitive\n- name: Full name of the user\n- email: Valid email address of the user\n- phone: Phone number of the user\n\nEnsure the selected time is available before booking.",
+        "method": "POST",
+        "url": "https://api.calendly.com/invitees",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_CALENDLY_API_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"event_type\": \"https://api.calendly.com/event_types/YOUR_EVENT_TYPE_UUID\",\n\"start_time\": \"{{ $fromAI('start_time', 'The EXACT time the user selected. this is highly sensitive , converted to UTC format YYYY-MM-DDTHH:MM:SS.000000Z') }}\",\n\"invitee\": {\n    \"name\": \"{{ $fromAI('name', 'The users name') }}\",\n    \"email\": \"{{ $fromAI('email', 'The users email address') }}\",\n    \"timezone\": \"America/Chicago\"\n  },\n  \"location\": {\n    \"kind\": \"custom\",\n\"location\": \"YOUR_ZOOM_MEETING_URL\"\n  },\n  \"questions_and_answers\": [\n    {\n      \"question\": \"Please enter your phone number.\",\n      \"answer\": \"{{ $fromAI('phone', 'The users phone number with country code') }}\",\n      \"position\": 0\n    },\n    {\n      \"question\": \"What are you hoping to get clarity on during this conversation?\",\n      \"answer\": \"{{ $fromAI('clarity_goals', 'If you have answer add or add N/A') }}\",\n      \"position\": 1\n    },\n    {\n      \"question\": \"Do you have any hesitations or concerns about participating in a retreat like this?\",\n      \"answer\": \"{{ $fromAI('hesitations', 'If you have answer add or add N/A') }}\",\n      \"position\": 2\n    },\n    {\n      \"question\": \"What feels ready for change in your life right now?\",\n      \"answer\": \"{{ $fromAI('life_change', 'If you have answer add or add N/A') }}\",\n      \"position\": 3\n    },\n    {\n      \"question\": \"Is there anything important we should know before speaking?\",\n      \"answer\": \"{{ $fromAI('important', 'If you have answer add or add N/A') }}\",\n      \"position\": 4\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1184,
+        1088
+      ],
+      "id": "node-calendly-booking-001",
+      "name": "Invitee for a event"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "CRITICAL: Call this tool EVERY TIME the visitor sends a message. This logs each visitor message and your response to Monday.com. You MUST call this tool after EVERY visitor message to maintain a complete conversation log. Required: summary (your exact reply to the current visitor message). This tool runs once per visitor message, not once per conversation.",
+        "resource": "boardItem",
+        "boardId": "YOUR_MONDAY_BOARD_ID",
+        "groupId": "group_conversation_logs",
+        "name": "={{ $json.sessionId }}",
+        "additionalFields": {
+          "columnValues": "={{\nJSON.stringify({\n\"text_summary_column_id\": $fromAI('summary', 'Agent exact same replies for the mesage'),\n\"text_user_message_column_id\": $json.chatInput\n})\n}}"
+        }
+      },
+      "type": "n8n-nodes-base.mondayComTool",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        1184
+      ],
+      "id": "node-conversation-log-001",
+      "name": "Conversation",
+      "credentials": {
+        "mondayComApi": {
+          "id": "YOUR_MONDAY_CREDENTIAL_ID",
+          "name": "Monday.com account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an item in a board's group in Monday.com": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add a tag to a subscriber in ConvertKit": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get availability Slot": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "The Example Retreat Info": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invitee for a event": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "America/Los_Angeles",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "00000000-0000-0000-0000-000000000000",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "id": "your-workflow-id",
+  "tags": []
 }
-</script>
-</body>
-</html>
